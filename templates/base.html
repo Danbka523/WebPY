@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ru" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}WebPY{% endblock %}</title>
+    {% load static %}
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+</head>
+<body>
+    <header class="bg-dark text-white p-3">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a href="/" class="d-flex align-items-center mb-2 mb-lg-0 text-white text-decoration-none">
+                <span class="fs-4">WebPY</span>
+            </a>   
+            <ul class="nav col-12 col-lg-auto mb-2 justify-content-center mb-md-0">          
+                <li><a href="{% url 'home' %}" class="nav-link px-2 text-white">Главная страница</a></li>
+                {% if user.is_authenticated %}
+                    <li><a href="{% url 'course_list' %}" class="nav-link px-2 text-white">Курсы</a></li>
+                    <li><a href="{% url 'editor' %}" class="nav-link px-2 text-white">Редактор кода</a></li>
+                {% endif %}
+            </ul>
+            <div class="text-end">
+                {% if user.is_authenticated %}
+                    <span class="text-white me-3">Привет, {{ user.username }}!</span>
+                    <a href="{% url 'logout' %}" class="btn btn-outline-light me-2">Выход</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-outline-light me-2">Вход</a>
+                    <a href="{% url 'register' %}" class="btn btn-warning">Регистрация</a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+    <main class="mb-5">
+        {% block content %}
+        {% endblock %}
+    </main>
+    <footer class="bg-dark text-white p-3">
+        <div class="container">
+            <div class="text-center">
+                made by Danbka523
+            </div>
+        </div>
+    </footer>
+    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+</body>
+</html>

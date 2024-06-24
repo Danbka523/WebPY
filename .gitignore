@@ -1,0 +1,5 @@
+.vs/
+.vscode/
+secrets/
+*.dot
+*.sqlite3

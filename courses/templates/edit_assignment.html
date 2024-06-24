@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ru" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit assignment</title>
+    {% load static %}
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Edit assignment</h1>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <h2>Test cases</h2>
+            {{ formset.management_form }}
+            {% for form in formset %}
+                {{ form.as_p }}
+            {% endfor %}
+            <button class="btn btn-primary" type="submit">Save</button>
+        </form>
+    </div>
+    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+{% load courses_extras %}
+<main class="container mt-5">
+    <h1 class="text-center mb-5">Выберите тему</h1>
+
+    <form method="get" class="d-flex justify-content-center mb-5">
+        <select title='topic' name="topic" class="form-control mr-2">
+            <option value="">Все темы</option>
+            <option value="python">Основы Python</option>
+            <option value="web">Основы Web на Python</option>
+            <option value="django">Основы Django</option>
+        </select>
+        <button type="submit" class="btn btn-primary">Показать курсы</button>
+    </form>
+
+    <div class="row">
+        {% for course in courses %}
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ course.name }}</h5>
+                    <p class="card-text">{{ course.topic }}</p>
+                    <a href="{% url 'course_detail' course.id %}" class="btn btn-primary">Подробнее</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if not courses %}
+        <p class="text-center">Нет курсов для выбранной темы.</p>
+    {% endif %}
+
+    {% if request.user|has_group:"Teachers" or request.user.is_superuser %}   
+        <div class="d-flex justify-content-center mt-5">
+            <a href="{% url 'create_course' %}" class="btn btn-success">Создать курс</a>
+        </div>     
+    {% endif %}
+</main>
+{% endblock %}
+

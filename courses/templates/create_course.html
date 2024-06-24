@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <main class="form-signin w-50 m-auto mt-5">
+        <h1 class="h3 mb-3 fw-normal text-center">Создать новый курс</h1>
+        <form method="post">    
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button class="btn btn-primary w-100 py-2" type="submit">Создать</button>
+        </form>
+    </main>
+{% endblock %}
+

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load courses_extras %}
+{% block content %}
+    <div class="container mt-5">
+        <h1 class="display-4">{{ course.name }}</h1>
+        <p class="lead">{{ course.description|newline_to_br|safe }}</p>
+        <p>{{ course.content|newline_to_br|safe }}</p>
+    </div>
+    <div class="container mt-5">
+        <h2 class="h3">Задания</h2>
+        <ul class="list-group">
+            {% for assignment in course.assignments.all %}
+                <li class="list-group-item">
+                    <a class="text-decoration-none" href="{% url 'assignment_detail' course.id assignment.id %}">{{ assignment.title }}</a>
+                </li>
+            {% empty %}
+                <li class="list-group-item">Заданий нет</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% if request.user|has_group:"Teachers" or user.is_superuser %}
+        <div class="d-flex justify-content-center mt-5">
+            <a class="btn btn-primary me-2" href="{% url 'add_assignment' course.id %}">Добавить задание</a>
+            <a class="btn btn-primary" href="{% url 'edit_course' course.id %}">Редактировть курс</a>
+        </div>
+    {% endif %}
+{% endblock %}

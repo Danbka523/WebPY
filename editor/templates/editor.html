@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ru" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>Editor</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" >
+    <link rel="stylesheet" href="{% static 'codemirror/theme/mdn-like.css' %}">
+    <link rel="stylesheet" href="{% static 'codemirror/lib/codemirror.css' %}">
+
+    <script src="{% static 'codemirror/lib/codemirror.js' %}"></script>
+    <script src="{% static 'codemirror/addon/mode/overlay.js' %}"></script>
+    <script src="{% static 'codemirror/mode/xml/xml.js' %}"></script>
+    <script src="{% static 'codemirror/mode/htmlmixed/htmlmixed.js' %}"></script>
+    <script src="{% static 'codemirror/mode/django/django.js' %}"></script>
+    <script src="{% static 'codemirror/mode/python/python.js' %}"></script>
+    <script src="{% static 'codemirror/mode/css/css.js' %}"></script>
+    <script src="{% static 'codemirror/mode/javascript/javascript.js' %}"></script>
+
+    <style>
+        .CodeMirror {
+            border-top: 1px solid black;
+            border-bottom: 1px solid black;
+        }
+
+        .resizable-editor {
+            resize: both;
+            overflow: auto;
+        }
+
+        .resizable-result {
+            resize: both;
+            overflow: auto;
+        }
+
+        .resizable-directory {
+            resize: both;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <header class="container-fluid">
+        <div class="row align-items-center justify-content-center">
+            <div class="col-md-auto d-flex justify-content-end">
+                <button class="btn btn-primary" type="button" onclick="window.location.href='/'">Главная страница</button>
+            </div>
+            {% if assignment.id != 0 %}
+            <div class="col-md-auto d-flex justify-content-end">
+                <button class="btn btn-primary" type="button" onclick="checkCode()">Проверить</button>
+            </div>
+            {% endif %} 
+            <div class="col-md-auto d-flex justify-content-end">
+                <button class="btn btn-primary" type="button" onclick="runCode()">Запустить</button>
+            </div>
+            {% if assignment.id == 0 %}
+            <div class="col-md-auto d-flex justify-content-end">
+                <form action="" method="post">
+                    {% csrf_token %}
+                    <input name="code_output" id="code_output" style="display: none; white-space: pre-wrap;" value=""/> 
+                    <button class="btn btn-primary" type="submit" onclick="saveFile()">Сохранить</button>      
+                </form>  
+            </div>
+            <div class="col-md-auto d-flex justify-content-end">
+                <button class="btn btn-primary" type="button" onclick="createFile()">Создать</button>
+            </div>
+            <div class="col-md-auto d-flex justify-content-end">
+                <button class="btn btn-primary" type="button" onclick="deleteFile()">Удалить</button>
+            </div>
+            {% endif %} 
+        </div>
+    </header>
+    <main>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-8">
+                    <form class="">
+                        <label for="code">Пишите ваш код здесь:</label>
+                        <textarea class="form-control code resizable-editor" name="code" id="code" rows="20">{{ file_content }}</textarea>
+                    </form>
+                </div>
+                
+                <div class="col-md-4">
+                    <h1>Входные данные</h1> 
+                    <input type="text" class="form-control" id="inputs" placeholder="Inputs">
+                </div>
+
+                <div class="col-md-4">
+                    <h1>Резлуьтат</h1> 
+                    <button class="btn btn-primary" type="button" onclick="document.getElementById('result').innerText = ''">Очистить</button>
+                    <pre class="resizable-result" name="result" id="result" value="Output"></pre>
+                </div>
+                {% if assignment.id != 0 %}
+                <div class="col-md-4">
+                    <h1>Описание задания </h1>
+                    <script>
+                        console.log("{{ assignment.content }}");
+                    </script>
+                    <p>{{ assignment.description }}</p>
+                    <p>{{ assignment.content }}</p>
+                </div>
+                <div id="check_result" class="col-md-4"></div>
+                {% endif %} 
+            </div>
+            {% if assignment.id == 0 %}
+            <div class="row">
+                <h1>Список файлов</h1>
+                <ul>
+                    {% for file in files %}
+                        <li><form action="" method="get"><button type="submit" name="file" value="{{ file }}">{{ file }}</button></li>
+                    {% endfor %}
+                </ul>
+            </div> 
+            {% endif %} 
+        </div>
+    </main>
+    <footer>
+        <div class="col-md-auto d-flex justify-content-center align-items-center">
+            <p class="text-light font-weight-bold">Хорошей работы, {{ user.username }}!</p>
+        </div>
+    </footer>
+    <script>
+        function getExt(){
+            if ("{{ file|escapejs }}".endsWith(".html")) {           
+                return "django"
+            }
+            if ("{{ file|escapejs }}".endsWith(".py") || "{{ file|escapejs }}"=="None") {
+                return "python"
+            }   
+            if ("{{ file|escapejs }}".endsWith(".js")) {
+                return "javascript"
+            }   
+            if ("{{ file|escapejs }}".endsWith(".css")) {
+                return "css"
+            }      
+    }
+        let editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+        lineNumbers: true,
+        mode: getExt(),
+        indentUnit: 2,
+        indentWithTabs: true,
+        theme: "mdn-like",
+        lineSeparator :'\n',
+    });
+
+    function runCode() {
+        let code = editor.getValue();
+        let inputs = document.getElementById('inputs').value;
+        console.log(inputs)
+        let result_text=document.getElementById('result');
+        fetch('{% url "interpreter" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: new URLSearchParams({code: code, inputs:inputs})
+        })
+        .then(response => response.json())  
+        .then(data => { 
+            if (data.result) {
+                result_text.innerText += 'Output: ' + data.result;
+            } else if (data.error) {
+                result_text.innerText += 'Error: ' + data.error;
+            }
+        })
+        .catch(error => {
+            result_text.innerText += 'Request failed: ' + error;
+        });
+    }
+
+    function checkCode() {
+        let code = editor.getValue();
+        fetch('{% url "checker" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: new URLSearchParams({code: code, assignment_id: "{{ assignment.id }}"})
+        })
+        .then(response => response.json())  
+        .then(data => {
+                let output = document.getElementById('check_result');
+                output.textContent = '';
+                data.forEach(test => {
+                    output.textContent += `Input: ${test.input}\nOutput: ${test.output}\nResult: ${test.result}\n`;
+                    if (test.result === 'Failed') {
+                        output.textContent += `Expected: ${test.expected}\n`;
+                    }
+                    if (test.result === 'Error') {
+                        output.textContent += `Error: ${test.error}\n`;
+                    }
+                    output.textContent += '\n';
+                });
+        });
+}
+
+    function saveFile(){
+        document.getElementById('code_output').value =(JSON.stringify(editor.getValue()))
+        console.log(JSON.stringify(editor.getValue()));
+}
+
+    function createFile(){
+        let file = prompt("Enter file name");
+        if (file == null || file == "") {
+            alert('Назавение не может быть пустым');
+        }
+        let xhr = new XMLHttpRequest();
+        let url = '/editor?file=' + file + "&isnew=true";
+        xhr.open('GET', url, true);
+        xhr.onload = function (e) {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    console.log(xhr.responseText);
+                } else {
+                    console.error(xhr.statusText);
+                }
+            }
+        };
+        xhr.onerror = function (e) {
+            console.error(xhr.statusText);
+        };
+        xhr.send(null);
+    }
+        
+    function deleteFile(){
+        let file = "{{ file|escapejs }}";
+        let xhr = new XMLHttpRequest();
+        let url = '/editor?file=' + file + "&isdelete=true";
+        xhr.open('GET', url, true);
+        xhr.onload = function (e) {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    console.log(xhr.responseText);
+                    window.location.assign("/editor");
+                } else {
+                    console.error(xhr.statusText);
+                }
+            }
+        };
+        xhr.onerror = function (e) {
+            console.error(xhr.statusText);
+        };
+        xhr.send(null);
+
+    }
+
+    </script>
+</body>
+</html>

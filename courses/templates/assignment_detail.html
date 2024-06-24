@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load courses_extras %}
+
+{% block content %}
+<main class="container mt-5">
+    <div class="row">
+        <div class="col-md-8">
+            <h1 class="display-4">{{ assignment.title }}</h1>
+            <p>{{ assignment.description|newline_to_br|safe }}</p>
+            <pre>{{ assignment.content|newline_to_br|safe }}</pre>
+        </div>
+        <div class="col-md-4 d-flex align-items-center">
+            <a href="{% url 'editor' assignment.id %}" class="btn btn-primary mt-3 me-2">Выполнить задание</a>
+            {% if request.user|has_group:"Teachers" or user.is_superuser %}
+            <a href="{% url 'edit_assignment' course.id assignment.id %}" class="btn btn-primary">Редактирвоть задание</a>
+            {% endif %}
+        </div>
+    </div>
+</main>
+{% endblock %}
+
